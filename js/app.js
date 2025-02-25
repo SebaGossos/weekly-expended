@@ -22,7 +22,12 @@ class Budget {
 
     newSpent( spent ) {
         this.expenses = [...this.expenses, spent];
-        console.log( this.expenses )
+        this.calculateRemaining();
+    }
+
+    calculateRemaining() {
+        const spent = this.expenses.reduce( ( total, bill ) => total + bill.quantity, 0 );
+        this.remaining = this.budget - spent;
     }
 }
 
@@ -56,7 +61,71 @@ class UI {
         setTimeout(() => {
             divMessage.remove();
         }, 3000);
+    }
+
+    addBudgetList( bills ) {
+
+        // Clean HTML;
+        this.cleanHTML();
         
+        // Iterate
+        bills.forEach( bill => {
+            
+            const { quantity, name, id } = bill;
+
+            // add an LI
+            const newBill = document.createElement("li");
+            newBill.className = 'list-group-item d-flex justify-content-between align-items-center';
+            newBill.dataset.id = id;
+
+            // add HTML with bills
+            newBill.innerHTML = `
+                ${ name } <span class="badge badge-primary badge-pill">$ ${ quantity }</span>
+            `;
+
+            // boton to delet bill
+            const btnDelet = document.createElement('button');
+            btnDelet.classList.add('btn','btn-danger', 'borrar-gasto')
+            btnDelet.innerHTML = 'Borrar &times'
+
+            newBill.appendChild( btnDelet );
+
+            // add to HTLM
+            expenseList.appendChild( newBill );
+            
+        });
+    }
+
+    cleanHTML() {
+        while( expenseList.firstChild ) {
+            expenseList.removeChild( expenseList.firstChild )
+        }
+    }
+
+    updateRemaining( remaining ) {
+        document.querySelector('#restante').textContent = remaining;
+    }
+
+    checkBudget( remainingObj ) {
+        const { budget, remaining } = remainingObj;
+
+        const remainingDiv = document.querySelector('.restante');
+
+        // Check 25%
+        if( ( budget / 4 ) >= remaining ) {
+            remainingDiv.classList.remove('alert-success', 'alert-warning');
+            remainingDiv.classList.add('alert-danger');
+        } else if (( budget / 2 ) >= remaining ) {
+            remainingDiv.classList.remove('alert-success');
+            remainingDiv.classList.add('alert-warning');
+        }
+
+        // if Total is 0 or less
+        if( remaining <= 0 ) {
+            ui.printAlert('El presupuesto se ah agotado', 'error' );
+
+            form.querySelector('button[type="submit"]').disabled = true;
+        }
     }
 }
 // instance
@@ -105,6 +174,14 @@ function addExpenses( e ) {
 
     // MESSAGE OF ALL GOOD
     ui.printAlert('expense added correctly')
+
+    // Print budgets
+    const { expenses, remaining } = budget;
+    ui.addBudgetList( expenses );
+
+    ui.updateRemaining( remaining );
+
+    ui.checkBudget( budget );
 
     // RESET FORM
     form.reset();
