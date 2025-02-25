@@ -29,6 +29,12 @@ class Budget {
         const spent = this.expenses.reduce( ( total, bill ) => total + bill.quantity, 0 );
         this.remaining = this.budget - spent;
     }
+
+    deleteBill( id ) {
+        this.expenses = this.expenses.filter( expense => expense.id !== id );
+
+        this.calculateRemaining();
+    }
 }
 
 class UI {
@@ -63,7 +69,7 @@ class UI {
         }, 3000);
     }
 
-    addBudgetList( bills ) {
+    showExpenses( bills ) {
 
         // Clean HTML;
         this.cleanHTML();
@@ -72,7 +78,6 @@ class UI {
         bills.forEach( bill => {
             
             const { quantity, name, id } = bill;
-
             // add an LI
             const newBill = document.createElement("li");
             newBill.className = 'list-group-item d-flex justify-content-between align-items-center';
@@ -87,6 +92,9 @@ class UI {
             const btnDelet = document.createElement('button');
             btnDelet.classList.add('btn','btn-danger', 'borrar-gasto')
             btnDelet.innerHTML = 'Borrar &times'
+            btnDelet.onclick = () => {
+                deleteBill( id );
+            }
 
             newBill.appendChild( btnDelet );
 
@@ -116,8 +124,12 @@ class UI {
             remainingDiv.classList.remove('alert-success', 'alert-warning');
             remainingDiv.classList.add('alert-danger');
         } else if (( budget / 2 ) >= remaining ) {
-            remainingDiv.classList.remove('alert-success');
+            remainingDiv.classList.remove('alert-success', 'alert-danger');
             remainingDiv.classList.add('alert-warning');
+            console.log(22110)
+        } else {
+            remainingDiv.classList.remove('alert-danger', 'alert-warning')
+            remainingDiv.classList.add('alert-success')
         }
 
         // if Total is 0 or less
@@ -177,7 +189,7 @@ function addExpenses( e ) {
 
     // Print budgets
     const { expenses, remaining } = budget;
-    ui.addBudgetList( expenses );
+    ui.showExpenses( expenses );
 
     ui.updateRemaining( remaining );
 
@@ -187,3 +199,13 @@ function addExpenses( e ) {
     form.reset();
 }
 
+function deleteBill( id ) {
+    // Delete from object
+    budget.deleteBill( id );
+
+    // Delete Expenses from HTML
+    const { expenses, remaining } = budget;
+    ui.showExpenses( expenses );
+    ui.updateRemaining(remaining);
+    ui.checkBudget(budget);
+}
